@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Upload, Button, message, Space, List,Layout,Typography } from "antd";
-import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
+import { Upload, Button, message, Space, List,Layout,Typography, Flex } from "antd";
+import { DeleteOutlined, DownloadOutlined, UploadOutlined } from "@ant-design/icons";
 import { PDFDocument } from "pdf-lib";
 import dayjs from "dayjs";
 
@@ -102,10 +102,15 @@ const MergePDF: React.FC = () => {
 
         {/* 右侧列表部分 */}
         <div style={{ flex: 2, padding: "16px", border: "1px solid #f0f0f0", borderRadius: "8px" }}>
-          <Title level={4}>已合并的 PDF 文件</Title>
+          <Flex justify="space-between" style={{width:"100%"}}>
+            <Title level={4}>已合并的 PDF 文件</Title>
+            <Button style={{marginTop:16}} type="link" onClick={()=>{
+              setMergedPdfUrlList([]);
+            }}>清空</Button>
+          </Flex>
           <List
             dataSource={mergedPdfUrlList}
-            renderItem={(item) => (
+            renderItem={(item,index) => (
               <List.Item
                 actions={[
                   <Button
@@ -115,6 +120,19 @@ const MergePDF: React.FC = () => {
                   >
                     下载
                   </Button>,
+                  <Button
+                    type="link"
+                    icon={<DeleteOutlined />}
+                    onClick={() => {
+                      setMergedPdfUrlList(
+                        mergedPdfUrlList.filter(
+                          (pdf,listIndex) => listIndex !== index
+                        )
+                      );
+                    }}
+                  >
+                    删除
+                  </Button>
                 ]}
               >
                 <List.Item.Meta
