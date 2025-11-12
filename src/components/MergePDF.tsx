@@ -1,6 +1,20 @@
 import React, { useState } from "react";
-import { Upload, Button, message, Space, List,Layout,Typography, Flex } from "antd";
-import { DeleteOutlined, DownloadOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+  Upload,
+  Button,
+  message,
+  Space,
+  List,
+  Layout,
+  Typography,
+  Flex,
+  type UploadFile,
+} from "antd";
+import {
+  DeleteOutlined,
+  DownloadOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import { PDFDocument } from "pdf-lib";
 import dayjs from "dayjs";
 
@@ -12,19 +26,21 @@ type mergedPdfUrlList = {
   time: number;
 };
 const MergePDF: React.FC = () => {
-  const [fileList, setFileList] = useState<File[]>([]);
+  const [uploadFileList, setUploadFileList] = useState<UploadFile[]>([]);
   const [mergedPdfUrlList, setMergedPdfUrlList] = useState<mergedPdfUrlList[]>(
     []
   );
 
   // 处理文件上传
   const handleUpload = (info: any) => {
-    const newFileList = info.fileList.map((file: any) => file.originFileObj);
-    setFileList(newFileList);
+    //const newFileList = info.fileList.map((file: any) => file.originFileObj);
+    setUploadFileList(info.fileList);
+    // setUploadFileList(newFileList);
   };
 
   // 合并 PDF 文件
   const mergePDFs = async () => {
+    const fileList = uploadFileList;
     if (fileList.length < 2) {
       message.warning("请至少上传两个 PDF 文件进行合并！");
       return;
@@ -34,8 +50,9 @@ const MergePDF: React.FC = () => {
       const mergedPdf = await PDFDocument.create();
 
       for (const file of fileList) {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await PDFDocument.load(arrayBuffer);
+        
+        const arrayBuffer = await file.originFileObj?.arrayBuffer();
+        const pdf = await PDFDocument.load(arrayBuffer!);
         const copiedPages = await mergedPdf.copyPages(
           pdf,
           pdf.getPageIndices()
@@ -80,9 +97,28 @@ const MergePDF: React.FC = () => {
     <Layout style={{ padding: "24px", background: "#fff" }}>
       <Content style={{ display: "flex", gap: "24px" }}>
         {/* 左侧操作部分 */}
-        <div style={{ flex: 1, padding: "16px", border: "1px solid #f0f0f0", borderRadius: "8px" }}>
-          <Title level={4}>PDF 合并操作</Title>
+        <div
+          style={{
+            flex: 1,
+            padding: "16px",
+            border: "1px solid #f0f0f0",
+            borderRadius: "8px",
+          }}
+        >
+          <Flex justify="space-between" style={{ width: "100%" }}>
+            <Title level={4}>PDF 合并操作</Title>
+            <Button
+              style={{ marginTop: 16 }}
+              type="link"
+              onClick={() => {
+                setUploadFileList([]);
+              }}
+            >
+              清空
+            </Button>
+          </Flex>
           <Upload
+            fileList={uploadFileList}
             multiple
             accept=".pdf"
             beforeUpload={() => false} // 阻止自动上传
@@ -93,7 +129,7 @@ const MergePDF: React.FC = () => {
           <Button
             type="primary"
             onClick={mergePDFs}
-            disabled={fileList.length < 2}
+            disabled={uploadFileList.length < 2}
             style={{ marginTop: 16 }}
           >
             合并 PDF
@@ -101,16 +137,29 @@ const MergePDF: React.FC = () => {
         </div>
 
         {/* 右侧列表部分 */}
-        <div style={{ flex: 2, padding: "16px", border: "1px solid #f0f0f0", borderRadius: "8px" }}>
-          <Flex justify="space-between" style={{width:"100%"}}>
+        <div
+          style={{
+            flex: 2,
+            padding: "16px",
+            border: "1px solid #f0f0f0",
+            borderRadius: "8px",
+          }}
+        >
+          <Flex justify="space-between" style={{ width: "100%" }}>
             <Title level={4}>已合并的 PDF 文件</Title>
-            <Button style={{marginTop:16}} type="link" onClick={()=>{
-              setMergedPdfUrlList([]);
-            }}>清空</Button>
+            <Button
+              style={{ marginTop: 16 }}
+              type="link"
+              onClick={() => {
+                setMergedPdfUrlList([]);
+              }}
+            >
+              清空
+            </Button>
           </Flex>
           <List
             dataSource={mergedPdfUrlList}
-            renderItem={(item,index) => (
+            renderItem={(item, index) => (
               <List.Item
                 actions={[
                   <Button
@@ -126,13 +175,13 @@ const MergePDF: React.FC = () => {
                     onClick={() => {
                       setMergedPdfUrlList(
                         mergedPdfUrlList.filter(
-                          (pdf,listIndex) => listIndex !== index
+                          (pdf, listIndex) => listIndex !== index
                         )
                       );
                     }}
                   >
                     删除
-                  </Button>
+                  </Button>,
                 ]}
               >
                 <List.Item.Meta
